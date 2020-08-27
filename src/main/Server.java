@@ -12,9 +12,11 @@ import java.util.Scanner;
 public class Server {
 
 	private final String forbiddenDirectory = "ForbiddenFiles";
-	private final static String noFileFoundMessage = "404 File not found\r\n";
-	private final static String forbiddenMessage = "403 Access forbidden\r\n";
+	private final static String noFileFoundMessage = "404 File not found";
+	private final static String forbiddenMessage = "403 Access forbidden";
+	private final static String fileFoundMessage = "202 File Found";
 	private final static String welcomeMessage = "Welcome To The HTTP Server!";
+	private final static String[] filePaths = { "/Files/File1/", "/Files/File2/", "/ForbiddenFiles/ForbiddenFile1/" };
 
 	public static void main(String[] args) throws IOException {
 
@@ -28,57 +30,69 @@ public class Server {
 					PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 					BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));) {
 
-				String inputLine;
+				String inputLine = "";
 				System.out.println("Debug : Client Connected");
+				out.println(welcomeMessage);
 
-				if ((inputLine = in.readLine()) != null) {
+				while ((inputLine = in.readLine()) != null) {
+					System.out.println("Debug: Input= " + inputLine);
+					String path = "";
 
-					String path = cleanPath(inputLine);
+					path = cleanPath(inputLine);
 
-					if (!path.equals("/")) {
+					Boolean directoryAccess = checkForbidden(path);
 
-						Boolean directoryAccess = checkForbidden(path);
+					// If user isn't trying to access forbidden directory
+					if (directoryAccess) {
+						System.out.println("User has access");
+						// Try to make a file object given path
+						try {
+							File file = new File(path);
+							System.out.println(path);
 
-						if (directoryAccess == true) {
+							// If file exist read it from directory
+							if (file.exists() && file.isFile()) {
 
-							try {
-								File file = new File("." + path);
+								System.out.println("File exists here it comes");
+								Scanner sc = new Scanner(file);
 
-								if (!file.exists() && !file.isFile()) {
-									out.write(noFileFoundMessage);
-									out.flush();
-								} else {
-									Scanner sc = new Scanner(file);
-
-									while (sc.hasNext()) {
-										out.println(sc.nextLine());
-									}
+								out.println(fileFoundMessage);
+								String fileContents = "";
+								// Output the file to the user
+								while (sc.hasNext()) {
+									fileContents = fileContents + sc.nextLine() +"\n";
 								}
-							} catch (Exception io) {
-								out.write(noFileFoundMessage);
+								out.println(fileContents);
+								out.flush();
+								sc.close();
+							} else {
+								System.out.println("File not here");
+								out.println(noFileFoundMessage);
 								out.flush();
 							}
-
-						} else {
-							out.print(forbiddenMessage);
-							out.flush();
+						}
+						// Path doesn't exist
+						catch (Exception io) {
+							System.out.println("Exception");
 						}
 
-					} else {
-						out.println(welcomeMessage);
-						out.close();
-						in.close();
-						clientSocket.close();
 					}
-
+					// If path is forbidden from user access
+					else {
+						System.out.println("User forbidden access");
+						out.println(forbiddenMessage);
+						out.flush();
+					}
+					//out.close();
+					//in.close();
 				}
-
+				//clientSocket.close();
 			}
 		}
 	}
 
 	public static Boolean checkForbidden(String path) {
-		if (path.contains("ForbiddenFiles")) {
+		if (path.contains("Forbidden")) {
 			return false;
 		} else {
 			return true;
@@ -86,8 +100,11 @@ public class Server {
 	}
 
 	public static String cleanPath(String request) {
+		System.out.println(request);
 		String[] requestParam = request.split(" ");
-		String pathClean = requestParam[1];
+
+		String pathClean = "." + requestParam[1];
+		System.out.println(pathClean);
 		return pathClean;
 	}
 

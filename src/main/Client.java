@@ -11,24 +11,38 @@ public class Client {
 
 	public static void main(String[] args) throws IOException {
 
-		String hostName = args[0];
-		int portNumber = Integer.parseInt(args[1]);
+		String hostName = "127.0.0.1"; // args[0];
+		int portNumber = 8090; // Integer.parseInt(args[1]);
 
-		try (Socket kkSocket = new Socket(hostName, portNumber);
-				PrintWriter out = new PrintWriter(kkSocket.getOutputStream(), true);
-				BufferedReader in = new BufferedReader(new InputStreamReader(kkSocket.getInputStream()));) {
+		try (Socket clientSocket = new Socket(hostName, portNumber);
+				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+				BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));) {
 			String fromServer = "";
 			String fromUser = "";
-			Scanner stdIn = new Scanner(System.in);
-
+			
 			while ((fromServer = in.readLine()) != null) {
-				System.out.println(fromServer);
+				Scanner stdIn = new Scanner(System.in);
+				
+				while(in.ready()) {
+					System.out.println(in.readLine());
+				}
+				
+				//System.out.println("Server: " + fromServer);
+
+				
 				fromUser = stdIn.nextLine();
-
-				out.println(fromUser);
-
+				
+				if (fromUser != null && !fromUser.equals(" ") && !fromUser.contentEquals("")) {
+					fromUser = "GET " + fromUser + " HTTP/1.1";
+					System.out.println("Client: " + fromUser);
+					out.println(fromUser);
+					fromUser = "";
+				}
 			}
 
 		}
+
+		// System.out.println("You're connected");
+
 	}
 }
