@@ -22,8 +22,15 @@ public class Client {
 
 	public static void main(String[] args) throws IOException {
 
-		String hostName = args[0]; // Localhost : 127.0.0.1
-		int portNumber = Integer.parseInt(args[1]); // Port : 8090
+		Scanner serverInformation = new Scanner(System.in);
+		
+		System.out.print("Server IP Address: ");
+		String hostName = serverInformation.nextLine(); // Localhost : 127.0.0.1
+		
+		System.out.print("Server Port Number: ");
+		int portNumber = serverInformation.nextInt(); // Port : 8090
+		
+		System.out.println("Please enter the path you would like to access.");
 
 		try (Socket clientSocket = new Socket(hostName, portNumber);
 				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
